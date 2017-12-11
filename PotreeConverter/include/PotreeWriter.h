@@ -41,10 +41,11 @@ public:
 	int storeLimit = 20'000;
 	vector<Point> store;
 	bool isInMemory = true;
+	bool isQuadTree = false;
 
-	PWNode(PotreeWriter* potreeWriter, AABB aabb);
+	PWNode(PotreeWriter* potreeWriter, AABB aabb, bool isQuadTree);
 
-	PWNode(PotreeWriter* potreeWriter, int index, AABB aabb, int level);
+	PWNode(PotreeWriter* potreeWriter, int index, AABB aabb, int level, bool isQuadTree);
 
 	~PWNode();
 
@@ -115,11 +116,11 @@ public:
 	int pointsInMemory = 0;
 	string projection = "";
 	ConversionQuality quality = ConversionQuality::DEFAULT;
+	bool useQuadTree;
 
+	PotreeWriter(string workDir, ConversionQuality quality, bool useQuadTree);
 
-	PotreeWriter(string workDir, ConversionQuality quality);
-
-	PotreeWriter(string workDir, AABB aabb, float spacing, int maxDepth, double scale, OutputFormat outputFormat, PointAttributes pointAttributes, ConversionQuality quality);
+	PotreeWriter(string workDir, AABB aabb, float spacing, int maxDepth, double scale, OutputFormat outputFormat, PointAttributes pointAttributes, ConversionQuality quality, bool useQuadTree);
 
 	~PotreeWriter(){
 		close();

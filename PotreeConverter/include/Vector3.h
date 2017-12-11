@@ -50,12 +50,20 @@ public:
 		return x*x + y*y + z*z;
 	}
 
+	T squaredLength2D() {
+		return x*x + y*y;
+	}
+
 	T distanceTo(Vector3<T> p) const{
 		return ((*this) - p).length();
 	}
 
 	T squaredDistanceTo(const Vector3<T> &p) const{
 		return ((*this) - p).squaredLength();
+	}
+
+	T squaredDistanceTo2D(const Vector3<T> &p) const {
+		return ((*this) - p).squaredLength2D();
 	}
 
 	T maxValue(){

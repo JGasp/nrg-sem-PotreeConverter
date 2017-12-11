@@ -48,29 +48,55 @@ namespace Potree{
  * |/   |/
  * 0----4
  *
+ *
+ *
+ *    -z
+ *    /
+ *   O----x
+ *
+ *   1----3
+ *  /    /
+ * 0----2
+ *
  */
-AABB childAABB(const AABB &aabb, const int &index){
+AABB childAABB(const AABB &aabb, const int &index, bool isQuadTree){
 
 	Vector3<double> min = aabb.min;
 	Vector3<double> max = aabb.max;
 
-	if((index & 0b0001) > 0){
-		min.z += aabb.size.z / 2;
-	}else{
-		max.z -= aabb.size.z / 2;
-	}
+	if (isQuadTree) {
+		if ((index & 0b0001) > 0) {
+			min.y += aabb.size.y / 2;
+		}
+		else {
+			max.y -= aabb.size.y / 2;
+		}
 
-	if((index & 0b0010) > 0){
-		min.y += aabb.size.y / 2;
-	}else{
-		max.y -= aabb.size.y / 2;
-	}
+		if ((index & 0b0010) > 0) {
+			min.x += aabb.size.x / 2;
+		} else {
+			max.x -= aabb.size.x / 2;
+		}		
+	} else {
+		if ((index & 0b0001) > 0) {
+			min.z += aabb.size.z / 2;
+		} else {
+			max.z -= aabb.size.z / 2;
+		}
 
-	if((index & 0b0100) > 0){
-		min.x += aabb.size.x / 2;
-	}else{
-		max.x -= aabb.size.x / 2;
+		if ((index & 0b0010) > 0) {
+			min.y += aabb.size.y / 2;
+		} else {
+			max.y -= aabb.size.y / 2;
+		}
+
+		if ((index & 0b0100) > 0) {
+			min.x += aabb.size.x / 2;
+		} else {
+			max.x -= aabb.size.x / 2;
+		}
 	}
+	
 
 	return AABB(min, max);
 }
@@ -90,17 +116,26 @@ AABB childAABB(const AABB &aabb, const int &index){
  * |/   |/
  * 0----4
  *
+ *   1----2
+ *  /    /
+ * 0----3
+ *
  */
-int nodeIndex(const AABB &aabb, const Point &point){
+int nodeIndex(const AABB &aabb, const Point &point, bool isQuadTree){
 	int mx = (int)(2.0 * (point.position.x - aabb.min.x) / aabb.size.x);
-	int my = (int)(2.0 * (point.position.y - aabb.min.y) / aabb.size.y);
-	int mz = (int)(2.0 * (point.position.z - aabb.min.z) / aabb.size.z);
+	int my = (int)(2.0 * (point.position.y - aabb.min.y) / aabb.size.y);	
 
 	mx = min(mx, 1);
-	my = min(my, 1);
-	mz = min(mz, 1);
+	my = min(my, 1);	
+	
+	if (isQuadTree) {
+		return (mx << 1) | my;
+	} else {
+		int mz = (int)(2.0 * (point.position.z - aabb.min.z) / aabb.size.z);
+		mz = min(mz, 1);
 
-	return (mx << 2) | (my << 1) | mz;
+		return (mx << 2) | (my << 1) | mz;
+	}	
 }
 
 

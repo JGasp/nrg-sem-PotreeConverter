@@ -20,10 +20,11 @@ public:
 	vector<Vector3<double> > points;
 	vector<GridCell*> neighbours;
 	SparseGrid *grid;
+	bool isQuadTree;
 
-	GridCell();
+	GridCell(bool isQuadTree);
 
-	GridCell(SparseGrid *grid, GridIndex &index);
+	GridCell(SparseGrid *grid, GridIndex &index, bool isQuadTree);
 
 	void add(Vector3<double> p);
 

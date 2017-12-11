@@ -53,6 +53,7 @@ public:
 	string description = "";
 	bool edlEnabled = false;
 	bool showSkybox = false;
+	bool useQuadtree = false;
 	string material = "RGB";
     string executablePath;
 

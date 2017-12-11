@@ -30,8 +30,9 @@ public:
 	AABB aabb;
 	float squaredSpacing;
 	unsigned int numAccepted = 0;
+	bool isQuadTree;
 
-	SparseGrid(AABB aabb, float minGap);
+	SparseGrid(AABB aabb, float minGap, bool isQuadTree);
 
 	SparseGrid(const SparseGrid &other)
 		: width(other.width), height(other.height), depth(other.depth), aabb(other.aabb), squaredSpacing(other.squaredSpacing), numAccepted(other.numAccepted)

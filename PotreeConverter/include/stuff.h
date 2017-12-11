@@ -58,7 +58,7 @@ namespace Potree {
 	 * 0----4
 	 *
 	 */
-	AABB childAABB(const AABB &aabb, const int &index);
+	AABB childAABB(const AABB &aabb, const int &index, bool isQuadtree);
 
 
 	/**
@@ -75,7 +75,7 @@ namespace Potree {
 	 * 0----4
 	 *
 	 */
-	int nodeIndex(const AABB &aabb, const Point &point);
+	int nodeIndex(const AABB &aabb, const Point &point, bool isQuadTree);
 
 
 	/**

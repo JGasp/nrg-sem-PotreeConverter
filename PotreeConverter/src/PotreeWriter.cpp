@@ -35,18 +35,21 @@ namespace fs = std::experimental::filesystem;
 
 namespace Potree{
 
-PWNode::PWNode(PotreeWriter* potreeWriter, AABB aabb){
+PWNode::PWNode(PotreeWriter* potreeWriter, AABB aabb, bool isQuadTree){
+	this->isQuadTree = isQuadTree;
 	this->potreeWriter = potreeWriter;
 	this->aabb = aabb;
-	this->grid = new SparseGrid(aabb, spacing());
+	this->isQuadTree = isQuadTree;
+	this->grid = new SparseGrid(aabb, spacing(), isQuadTree);
 }
 
-PWNode::PWNode(PotreeWriter* potreeWriter, int index, AABB aabb, int level){
+PWNode::PWNode(PotreeWriter* potreeWriter, int index, AABB aabb, int level, bool isQuadTree){
+	this->isQuadTree = isQuadTree;
 	this->index = index;
 	this->aabb = aabb;
 	this->level = level;
 	this->potreeWriter = potreeWriter;
-	this->grid = new SparseGrid(aabb, spacing());
+	this->grid = new SparseGrid(aabb, spacing(), isQuadTree);
 }
 
 PWNode::~PWNode(){
@@ -138,17 +141,17 @@ void PWNode::loadFromDisk(){
 	isInMemory = true;
 }
 
-PWNode *PWNode::createChild(int childIndex ){
-	AABB cAABB = childAABB(aabb, childIndex);
-	PWNode *child = new PWNode(potreeWriter, childIndex, cAABB, level+1);
+PWNode *PWNode::createChild(int childIndex){
+	AABB cAABB = childAABB(aabb, childIndex, isQuadTree);
+	PWNode *child = new PWNode(potreeWriter, childIndex, cAABB, level+1, isQuadTree);
 	child->parent = this;
 	children[childIndex] = child;
 
 	return child;
 }
 
-void PWNode ::split(){
-	children.resize(8, NULL);
+void PWNode ::split(){	
+	children.resize(isQuadTree ? 4 : 8, NULL);
 
 	string filepath = workDir() + "/data/" + path();
 	if(fs::exists(filepath)){
@@ -179,66 +182,8 @@ PWNode *PWNode::add(Point &point){
 	}else{
 
 		bool accepted = false;
-		//if(potreeWriter->quality == ConversionQuality::FAST){
-			accepted = grid->add(point.position);
-		//}else/* if(potreeWriter->quality == ConversionQuality::DEFAULT)*/{
-		//	PWNode *node = this;
-		//	accepted = true;
-		//	while(accepted && node != NULL){
-		//		accepted = accepted && node->grid->willBeAccepted(point.position, grid->squaredSpacing);
-		//		node = node->parent;
-		//	}
-		//
-		//	//node = this;
-		//	//while(accepted && node != NULL && node->children.size() > 0){
-		//	//	int childIndex = nodeIndex(node->aabb, point);
-		//	//
-		//	//	if(childIndex == -1){
-		//	//		break;
-		//	//	}
-		//	//
-		//	//	node = node->children[childIndex];
-		//	//
-		//	//	if(node == NULL){
-		//	//		break;
-		//	//	}
-		//	//
-		//	//	accepted = accepted && node->grid->willBeAccepted(point.position, grid->squaredSpacing);
-		//	//}
-		//
-		//	if(accepted){
-		//		grid->addWithoutCheck(point.position);
-		//	}
-		//}/*else if(potreeWriter->quality == ConversionQuality::NICE){
-		//	PWNode *node = this;
-		//	accepted = true;
-		//	while(accepted && node != NULL){
-		//		accepted = accepted && node->grid->willBeAccepted(point.position, grid->squaredSpacing);
-		//		node = node->parent;
-		//	}
-		//
-		//	node = this;
-		//	while(accepted && node != NULL && node->children.size() > 0){
-		//		int childIndex = nodeIndex(node->aabb, point);
-		//
-		//		if(childIndex == -1){
-		//			break;
-		//		}
-		//
-		//		node = node->children[childIndex];
-		//
-		//		if(node == NULL){
-		//			break;
-		//		}
-		//
-		//		accepted = accepted && node->grid->willBeAccepted(point.position, grid->squaredSpacing);
-		//	}
-		//
-		//
-		//	if(accepted){
-		//		grid->addWithoutCheck(point.position);
-		//	}
-		//}*/
+		
+		accepted = grid->add(point.position);
 
 		if(accepted){
 			cache.push_back(point);
@@ -253,10 +198,10 @@ PWNode *PWNode::add(Point &point){
 				return NULL;
 			}
 
-			int childIndex = nodeIndex(aabb, point);
+			int childIndex = nodeIndex(aabb, point, isQuadTree);
 			if(childIndex >= 0){
 				if(isLeafNode()){
-					children.resize(8, NULL);
+					children.resize(isQuadTree ? 4 : 8, NULL);
 				}
 				PWNode *child = children[childIndex];
 
@@ -345,7 +290,7 @@ void PWNode::flush(){
 			cache = vector<Point>();
 		}else if(!addCalledSinceLastFlush && isInMemory){
 			delete grid;
-			grid = new SparseGrid(aabb, spacing());
+			grid = new SparseGrid(aabb, spacing(), isQuadTree);
 			isInMemory = false;
 		}
 	}
@@ -461,12 +406,14 @@ PWNode* PWNode::findNode(string name){
 
 
 
-PotreeWriter::PotreeWriter(string workDir, ConversionQuality quality){
+PotreeWriter::PotreeWriter(string workDir, ConversionQuality quality, bool useQuadTree){
+	this->useQuadTree = useQuadTree;
 	this->workDir = workDir;
 	this->quality = quality;
 }
 
-PotreeWriter::PotreeWriter(string workDir, AABB aabb, float spacing, int maxDepth, double scale, OutputFormat outputFormat, PointAttributes pointAttributes, ConversionQuality quality){
+PotreeWriter::PotreeWriter(string workDir, AABB aabb, float spacing, int maxDepth, double scale, OutputFormat outputFormat, PointAttributes pointAttributes, ConversionQuality quality, bool useQuadTree){
+	this->useQuadTree = useQuadTree;
 	this->workDir = workDir;
 	this->aabb = aabb;
 	this->spacing = spacing;
@@ -497,7 +444,7 @@ PotreeWriter::PotreeWriter(string workDir, AABB aabb, float spacing, int maxDept
 	cloudjs.scale = this->scale;
 	cloudjs.pointAttributes = pointAttributes;
 
-	root = new PWNode(this, aabb);
+	root = new PWNode(this, aabb, useQuadTree);
 }
 
 string PotreeWriter::getExtension(){
@@ -549,6 +496,8 @@ void PotreeWriter::processStore(){
 
 				pointsInMemory++;
 				numAccepted++;
+			} else {
+				cout << "WTF";
 			}
 		}
 	});
@@ -693,7 +642,7 @@ void PotreeWriter::loadStateFromDisk(){
 			return a.size() < b.size();
 		});
 
-		PWNode *root = new PWNode(this, cloudjs.boundingBox);
+		PWNode *root = new PWNode(this, cloudjs.boundingBox, useQuadTree);
 		for(string hrcPath : hrcPaths){
 
 			fs::path pHrcPath(hrcPath);
@@ -726,8 +675,8 @@ void PotreeWriter::loadStateFromDisk(){
 					current->children.resize(8, NULL);
 					for(int j = 0; j < 8; j++){
 						if((children & (1 << j)) != 0){
-							AABB cAABB = childAABB(current->aabb, j);
-							PWNode *child = new PWNode(this, j, cAABB, current->level + 1);
+							AABB cAABB = childAABB(current->aabb, j, useQuadTree);
+							PWNode *child = new PWNode(this, j, cAABB, current->level + 1, useQuadTree);
 							child->parent = current;
 							child->addedSinceLastFlush = false;
 							child->isInMemory = false;

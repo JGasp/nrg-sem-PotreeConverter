@@ -62,6 +62,7 @@ struct PotreeArguments {
 	bool showSkybox = false;
 	string material = "RGB";
     string executablePath;
+	bool useQuadtree;
 };
 
 PotreeArguments parseArguments(int argc, char **argv){
@@ -92,6 +93,7 @@ PotreeArguments parseArguments(int argc, char **argv){
 	args.addArgument("edl-enabled", "Enable Eye-Dome-Lighting.");
 	args.addArgument("show-skybox", "");
 	args.addArgument("material", "RGB, ELEVATION, INTENSITY, INTENSITY_GRADIENT, CLASSIFICATION, RETURN_NUMBER, SOURCE, LEVEL_OF_DETAIL");
+	args.addArgument("use-quadtree", "Builds quadtree instend of octree");
 
 	PotreeArguments a;
 
@@ -221,6 +223,8 @@ PotreeArguments parseArguments(int argc, char **argv){
 		exit(1);
 	}
 
+	a.useQuadtree = args.has("use-quadtree");
+
 	// set default parameters 
 	fs::path pSource(a.source[0]);
 	a.outdir = args.has("outdir") ? args.get("outdir").as<string>() : pSource.generic_string() + "_converted";
@@ -295,6 +299,7 @@ int main(int argc, char **argv){
 		pc.edlEnabled = a.edlEnabled;
 		pc.material = a.material;
 		pc.showSkybox = a.showSkybox;
+		pc.useQuadtree = a.useQuadtree;
 
 		pc.convert();
 	}catch(exception &e){
