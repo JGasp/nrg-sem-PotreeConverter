@@ -89,7 +89,7 @@ long long LASPointReader::numPoints(){
 	}
 }
 
-bool LASPointReader::readNextPoint(){
+bool LASPointReader::readNextPoint() {
 
 	bool hasPoints = reader->readPoint();
 

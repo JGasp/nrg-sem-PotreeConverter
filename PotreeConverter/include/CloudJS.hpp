@@ -54,6 +54,7 @@ public:
 	int hierarchyStepSize = -1;
 	long long numAccepted = 0;
 	string projection = "";
+	bool isQuadTree = false;
 
 	CloudJS() = default;
 
@@ -197,6 +198,7 @@ public:
 		d.AddMember("spacing", spacing, d.GetAllocator());
 		d.AddMember("scale", scale, d.GetAllocator());
 		d.AddMember("hierarchyStepSize", hierarchyStepSize, d.GetAllocator());
+		d.AddMember("isQuadTree", isQuadTree, d.GetAllocator());
 
 		StringBuffer buffer;
 		PrettyWriter<StringBuffer> writer(buffer);

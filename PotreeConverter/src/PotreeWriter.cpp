@@ -118,8 +118,6 @@ PointWriter *PWNode::createWriter(string path){
 	}
 
 	return writer;
-
-
 }
 
 void PWNode::loadFromDisk(){
@@ -497,7 +495,7 @@ void PotreeWriter::processStore(){
 				pointsInMemory++;
 				numAccepted++;
 			} else {
-				cout << "WTF";
+				cout << "Point {" << p.pointSourceID << "} was not classified\n";
 			}
 		}
 	});
@@ -525,6 +523,7 @@ void PotreeWriter::flush(){
 		cloudjs.tightBoundingBox = tightAABB;
 		cloudjs.numAccepted = numAccepted;
 		cloudjs.projection = projection;
+		cloudjs.isQuadTree = this->useQuadTree;
 
 		ofstream cloudOut(workDir + "/cloud.js", ios::out);
 		cloudOut << cloudjs.getString();
